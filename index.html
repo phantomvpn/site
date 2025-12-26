@@ -1,47 +1,993 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Быстрый доступ к безопасному интернету</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantomflow | Системы защиты данных</title>
+    <meta name="description" content="Phantomflow - комплексные решения в области информационной безопасности и защиты цифровой инфраструктуры.">
+    
+    <!-- Подключение Three.js через CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Шрифт Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #030305;
+            --text-color: #e0e0e0;
+            --primary-color: #00d2ff; /* Строгое синее свечение */
+            --secondary-color: #6a00ff; /* Технологичный фиолетовый */
+            --glass-bg: rgba(20, 20, 25, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --card-hover: rgba(0, 210, 255, 0.08);
+            --font-main: 'Inter', sans-serif;
+            --transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- 3D Canvas Container --- */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -1;
+            /* Темное затемнение по краям для фокуса контента */
+            background: radial-gradient(circle at center, rgba(3,3,5,0) 0%, var(--bg-color) 90%);
+        }
+
+        /* --- UI Компоненты --- */
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition);
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Кнопки */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 36px;
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-color);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: -1;
+        }
+
+        .btn:hover {
+            color: var(--bg-color);
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.3);
+        }
+
+        .btn:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .btn-fill {
+            background: var(--primary-color);
+            color: var(--bg-color);
+        }
+
+        .btn-fill:hover {
+            background: #fff;
+            border-color: #fff;
+        }
+
+        /* --- Header --- */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 24px 0;
+            z-index: 100;
+            transition: var(--transition);
+        }
+
+        header.scrolled {
+            padding: 12px 0;
+            background: rgba(3, 3, 5, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--primary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+        }
+
+        .nav-links a {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            opacity: 1;
+            color: #fff;
+        }
+
+        /* --- Hero Section --- */
+        #hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            padding-top: 60px;
+        }
+
+        .hero-content {
+            max-width: 750px;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 4.5rem;
+            line-height: 1.05;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #ffffff 0%, #888888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s forwards 0.3s;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: #a0a0a0;
+            margin-bottom: 48px;
+            max-width: 550px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s forwards 0.5s;
+            font-weight: 300;
+        }
+
+        .hero-actions {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s forwards 0.7s;
+            display: flex;
+            gap: 20px;
+        }
+
+        /* --- Sections --- */
+        section {
+            padding: 120px 0;
+            position: relative;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 80px;
+            text-align: left;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 80px;
+        }
+
+        .section-header p {
+            max-width: 400px;
+            color: #888;
+            text-align: right;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: var(--primary-color);
+            margin: 20px 0 0;
+        }
+
+        /* --- Features (Grid) --- */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            border-radius: 4px;
+            backdrop-filter: blur(12px);
+            transition: var(--transition);
+            transform: translateY(30px);
+            opacity: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 0;
+            background: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .feature-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: var(--card-hover);
+            border-color: rgba(0, 210, 255, 0.3);
+        }
+
+        .feature-card:hover::before {
+            height: 100%;
+        }
+
+        .feature-icon {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 24px;
+            opacity: 0.8;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .feature-card p {
+            color: #999;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* --- Parallax Info --- */
+        .parallax-block {
+            padding: 200px 0;
+            background: url('https://picsum.photos/seed/abstracttech/1920/1080') no-repeat center center/cover;
+            background-attachment: fixed;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .parallax-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+        }
+
+        .parallax-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .parallax-content h2 {
+            font-size: 3rem;
+            margin-bottom: 24px;
+            color: #fff;
+        }
+
+        /* --- Solutions (Products) --- */
+        .solutions-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .solution-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+            border: 1px solid var(--glass-border);
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: var(--transition);
+            min-height: 400px;
+        }
+
+        .solution-card:hover {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 30px rgba(106, 0, 255, 0.15);
+        }
+
+        .solution-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .solution-card p {
+            color: #aaa;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .solution-link {
+            color: var(--primary-color);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .solution-link::after {
+            content: '→';
+            transition: transform 0.3s ease;
+        }
+
+        .solution-card:hover .solution-link::after {
+            transform: translateX(5px);
+        }
+
+        /* --- Articles --- */
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .article-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 4px;
+            overflow: hidden;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .article-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+        }
+
+        .article-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            opacity: 0.8;
+            transition: var(--transition);
+        }
+
+        .article-card:hover .article-img {
+            opacity: 1;
+        }
+
+        .article-content {
+            padding: 30px;
+        }
+
+        .article-tag {
+            font-size: 0.75rem;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: block;
+            font-weight: 700;
+        }
+
+        .article-title {
+            font-size: 1.25rem;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            color: #fff;
+        }
+
+        /* --- Footer --- */
+        footer {
+            background: #000;
+            padding: 100px 0 30px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 60px;
+            margin-bottom: 80px;
+        }
+
+        .footer-col h4 {
+            margin-bottom: 24px;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 12px;
+        }
+
+        .footer-col ul li a {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .footer-col ul li a:hover {
+            color: var(--primary-color);
+        }
+
+        .copyright {
+            text-align: center;
+            color: #444;
+            font-size: 0.85rem;
+            padding-top: 30px;
+            border-top: 1px solid #111;
+        }
+
+        /* --- Modal --- */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: #111;
+            border: 1px solid var(--glass-border);
+            padding: 50px;
+            max-width: 550px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+            transition: var(--transition);
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            color: #666;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .close-modal:hover { color: #fff; }
+
+        /* --- Animations --- */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .section-header p { text-align: left; }
+            .parallax-block { background-attachment: scroll; }
+            .nav-links { display: none; }
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-white font-sans">
+<body>
 
-  <header class="text-center py-10 bg-gray-800 shadow-md">
-    <h1 class="text-4xl font-bold mb-2">Phantom</h1>
-	<h2 class="text-2xl font-bold mb-2">Это доступ без ограничений</h2>
-    <p class="text-gray-300 text-lg">Добро пожаловать в ваш персональный помощник безопасного интернета</p>
-  </header>
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
 
-  <main class="max-w-3xl mx-auto px-4 py-10">
-    <section class="mb-10">
-      <h2 class="text-2xl font-semibold mb-4">Почему стоит нас выбрать?</h2>
-      <ul class="space-y-3 list-disc list-inside text-gray-200">
-        <li>Бесплатный пробный период 7 дней</li>
-	<li>Высокая скорость и стабильность</li>
-        <li>Анонимность и шифрование трафика</li>
-        <li>Автоматическая выдача ключей</li>
-        <li>Поддержка Android, iOS, Windows, macOS</li>
-      </ul>
-    </section>
+    <!-- Header -->
+    <header id="header">
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">
+                    <span>PHANTOM</span>FLOW
+                </a>
+                <div class="nav-links">
+                    <a href="#features">Технологии</a>
+                    <a href="#solutions">Решения</a>
+                    <a href="#articles">База знаний</a>
+                    <a href="#footer">Контакты</a>
+                </div>
+                <button class="btn btn-open-modal">Демо-доступ</button>
+            </nav>
+        </div>
+    </header>
 
-    <section class="bg-gray-800 p-6 rounded-2xl shadow-lg text-center mb-1">
-      <h3 class="text-xl font-semibold mb-2">🚀 Получите бесплатный ключ</h3>
-      <p class="text-gray-300 mb-4">Переходи и попробуй новый интернет</p>
-      <a href="https://t.me/PhantomVlessBot" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl text-lg transition">Получить ключ через Telegram</a>
-    </section>
-    <section class="bg-gray-800 p-4 rounded-2xl shadow-lg text-center mb-1">
-      <a href="https://t.me/phantomvless" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl text-lg transition">Инструкция по установке</a>
-    </section>
- <section class="bg-gray-800 p-4 rounded-2xl shadow-lg text-center">
-      <a href="https://youtube.com/@phantomvlessbot" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl text-lg transition">Наш YouTube канал</a>
-    </section>
-  </main>
+    <main>
+        <!-- Hero -->
+        <section id="hero">
+            <div class="container hero-content">
+                <h1>Архитектура невидимости</h1>
+                <p class="hero-subtitle">Мы разрабатываем проприетарные протоколы защиты данных, обеспечивая целостность информационной среды на уровне архитектуры.</p>
+                <div class="hero-actions">
+                    <a href="#solutions" class="btn btn-fill">Изучить решения</a>
+                    <a href="#features" class="btn">Технологии</a>
+                </div>
+            </div>
+        </section>
 
-  <footer class="text-center py-6 text-sm text-gray-500 bg-gray-800 mt-6">
-    © 2025 Phantom @PhantomVlessBot 
-  </footer>
+        <!-- Features / Technologies -->
+        <section id="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Технологическое ядро</h2>
+                    <p>Наши алгоритмы используют принципы хаотической динамики для максимальной энтропии передаваемых пакетов.</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card scroll-animate">
+                        <div class="feature-icon">⚛</div>
+                        <h3>Zero Trust Architecture</h3>
+                        <p>Каждый запрос аутентифицируется индивидуально. Никаких доверенных зон по умолчанию. Полный контроль над доступом.</p>
+                    </div>
+                    <div class="feature-card scroll-animate" style="transition-delay: 0.1s;">
+                        <div class="feature-icon">🔐</div>
+                        <h3>Квантово-устойчивое шифрование</h3>
+                        <p>Использование пост-квантовых криптографических примитивов для защиты данных от угроз вычислений будущего.</p>
+                    </div>
+                    <div class="feature-card scroll-animate" style="transition-delay: 0.2s;">
+                        <div class="feature-icon">👁</div>
+                        <h3>AI Threat Detection</h3>
+                        <p>Нейронные сети анализируют аномалии в поведении трафика в реальном времени, блокируя инциденты до их начала.</p>
+                    </div>
+                    <div class="feature-card scroll-animate" style="transition-delay: 0.3s;">
+                        <div class="feature-icon">🕸</div>
+                        <h3>Децентрализованная маршрутизация</h3>
+                        <p>Отсутствие единой точки отказа. Трафик динамически распределяется по узлам сети.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
+        <!-- Parallax Block -->
+        <div class="parallax-block">
+            <div class="container">
+                <div class="parallax-content">
+                    <h2>Безопасность — это процесс</h2>
+                    <p style="color: #ddd; font-size: 1.1rem; margin-bottom: 30px;">
+                        Статические методы защиты устаревают. Phantomflow создает живую экосистему, которая адаптируется к новым векторам атак быстрее, чем они появляются.
+                    </p>
+                    <button class="btn btn-open-modal">Запросить аудит</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Solutions (Replaced Pricing) -->
+        <section id="solutions">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Семейство решений</h2>
+                    <p>Модульная система позволяет интегрировать необходимые компоненты защиты в вашу инфраструктуру.</p>
+                </div>
+                <div class="solutions-wrapper">
+                    <div class="solution-card scroll-animate">
+                        <div>
+                            <h3>Phantom Core</h3>
+                            <p>Базовый модуль для мониторинга и фильтрации сетевого трафика. Обеспечивает базовый уровень защиты и инвентаризацию активов.</p>
+                        </div>
+                        <a href="#" class="solution-link">Подробнее</a>
+                    </div>
+                    
+                    <div class="solution-card scroll-animate" style="transition-delay: 0.1s;">
+                        <div>
+                            <h3>Phantom Shield</h3>
+                            <p>Продвинутый набор инструментов для защиты от DDoS-атак и инъекций кода. Виртуальные патчи для веб-приложений.</p>
+                        </div>
+                        <a href="#" class="solution-link">Подробнее</a>
+                    </div>
+
+                    <div class="solution-card scroll-animate" style="transition-delay: 0.2s;">
+                        <div>
+                            <h3>Phantom Ghost</h3>
+                            <p>Решение для маскирования цифрового следа и защиты метаданных коммуникаций. Уровень "невидимости" для корпоративных данных.</p>
+                        </div>
+                        <a href="#" class="solution-link">Подробнее</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Articles -->
+        <section id="articles">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">База знаний</h2>
+                </div>
+                <div class="articles-grid">
+                    <article class="article-card scroll-animate">
+                        <img src="https://picsum.photos/seed/tech1/500/300" alt="Tech" class="article-img">
+                        <div class="article-content">
+                            <span class="article-tag">Исследование</span>
+                            <h3 class="article-title">Эволюция социальных инженерных атак</h3>
+                            <p style="color: #777; font-size: 0.9rem;">Анализ новых методов взлома человеческого фактора в корпоративной среде.</p>
+                        </div>
+                    </article>
+                    <article class="article-card scroll-animate" style="transition-delay: 0.1s;">
+                        <img src="https://picsum.photos/seed/tech2/500/300" alt="Tech" class="article-img">
+                        <div class="article-content">
+                            <span class="article-tag">Криптография</span>
+                            <h3 class="article-title">Пост-квантовая криптография: готовы ли мы?</h3>
+                            <p style="color: #777; font-size: 0.9rem;">Почему симметричное шифрование переживет эпоху квантовых компьютеров.</p>
+                        </div>
+                    </article>
+                    <article class="article-card scroll-animate" style="transition-delay: 0.2s;">
+                        <img src="https://picsum.photos/seed/tech3/500/300" alt="Tech" class="article-img">
+                        <div class="article-content">
+                            <span class="article-tag">Инфраструктура</span>
+                            <h3 class="article-title">Микросегментация в облаке</h3>
+                            <p style="color: #777; font-size: 0.9rem;">Как правильно изолировать критические данные в распределенных системах.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <a href="#" class="logo" style="margin-bottom: 20px; display: inline-block;"><span>PHANTOM</span>FLOW</a>
+                    <p style="color: #666; font-size: 0.9rem; line-height: 1.6;">
+                        Разработка передовых систем информационной безопасности для предприятий нового поколения.
+                    </p>
+                </div>
+                <div class="footer-col">
+                    <h4>Продукты</h4>
+                    <ul>
+                        <li><a href="#">Phantom Core</a></li>
+                        <li><a href="#">Phantom Shield</a></li>
+                        <li><a href="#">Phantom Ghost</a></li>
+                        <li><a href="#">API Интеграция</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Компания</h4>
+                    <ul>
+                        <li><a href="#">О технологии</a></li>
+                        <li><a href="#">Карьера</a></li>
+                        <li><a href="#">Исследования</a></li>
+                        <li><a href="#">Контакты</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Документы</h4>
+                    <ul>
+                        <li><a href="#">Политика безопасности</a></li>
+                        <li><a href="#">Соглашение NDA</a></li>
+                        <li><a href="#">Соответствие стандартам</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2024 Phantomflow Security Systems. Все права защищены.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 style="color: #fff; margin-bottom: 20px;">Запрос доступа</h3>
+            <p style="color: #999; margin-bottom: 30px;">
+                Для получения демо-версии продукта или проведения аудита оставьте заявку. Наш специалист свяжется с вами в течение 24 часов.
+            </p>
+            <button class="btn btn-fill" style="width: 100%;" onclick="document.getElementById('modal').classList.remove('active')">Отправить заявку</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Three.js (Smooth Flow) ---
+        const initThreeJS = () => {
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            
+            // Легкий туман для скрытия границ
+            scene.fog = new THREE.FogExp2(0x030305, 0.0015);
+
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.z = 100;
+            camera.position.y = 20;
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // --- Частицы ---
+            const particlesCount = 2500;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particlesCount * 3);
+            // Сохраняем исходные позиции для вычисления волн
+            const initialPositions = new Float32Array(particlesCount * 3);
+            // Случайные параметры для каждой частицы (фаза, скорость волны)
+            const randomness = new Float32Array(particlesCount);
+
+            for (let i = 0; i < particlesCount; i++) {
+                // Создаем широкое поле частиц
+                const i3 = i * 3;
+                const x = (Math.random() - 0.5) * 200;
+                const y = (Math.random() - 0.5) * 100;
+                const z = (Math.random() - 0.5) * 200;
+
+                positions[i3] = x;
+                positions[i3 + 1] = y;
+                positions[i3 + 2] = z;
+
+                initialPositions[i3] = x;
+                initialPositions[i3 + 1] = y;
+                initialPositions[i3 + 2] = z;
+
+                randomness[i] = Math.random();
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            // Материал - маленькие точки
+            const material = new THREE.PointsMaterial({
+                size: 0.4,
+                color: 0x00d2ff,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
+            });
+
+            // Второй слой частиц (для глубины и объема)
+            const geometry2 = new THREE.BufferGeometry();
+            const positions2 = new Float32Array(particlesCount * 3);
+            for (let i = 0; i < particlesCount; i++) {
+                const i3 = i * 3;
+                const x = (Math.random() - 0.5) * 250;
+                const y = (Math.random() - 0.5) * 120;
+                const z = (Math.random() - 0.5) * 250;
+                positions2[i3] = x;
+                positions2[i3 + 1] = y;
+                positions2[i3 + 2] = z;
+            }
+            geometry2.setAttribute('position', new THREE.BufferAttribute(positions2, 3));
+            const material2 = new THREE.PointsMaterial({
+                size: 0.6,
+                color: 0x6a00ff,
+                transparent: true,
+                opacity: 0.3,
+                blending: THREE.AdditiveBlending
+            });
+
+            const particlesMesh = new THREE.Points(geometry, material);
+            const particlesMesh2 = new THREE.Points(geometry2, material2);
+            
+            scene.add(particlesMesh);
+            scene.add(particlesMesh2);
+
+            // Интерактивность
+            let mouseX = 0;
+            let mouseY = 0;
+            let targetX = 0;
+            let targetY = 0;
+
+            const windowHalfX = window.innerWidth / 2;
+            const windowHalfY = window.innerHeight / 2;
+
+            document.addEventListener('mousemove', (event) => {
+                mouseX = (event.clientX - windowHalfX);
+                mouseY = (event.clientY - windowHalfY);
+            });
+
+            const clock = new THREE.Clock();
+
+            const animate = () => {
+                requestAnimationFrame(animate);
+                const elapsedTime = clock.getElapsedTime();
+
+                targetX = mouseX * 0.0005;
+                targetY = mouseY * 0.0005;
+
+                // Плавный поворот всей системы за мышью
+                particlesMesh.rotation.y += 0.0005; // Автоматическое вращение
+                particlesMesh.rotation.x += (targetY - particlesMesh.rotation.x) * 0.05;
+                particlesMesh.rotation.y += (targetX - particlesMesh.rotation.y) * 0.05;
+
+                particlesMesh2.rotation.y += 0.0003; // Второй слой медленнее
+                particlesMesh2.rotation.x += (targetY - particlesMesh2.rotation.x) * 0.02;
+
+                // --- Плавная анимация волны (Без Math.random!) ---
+                const positions = particlesMesh.geometry.attributes.position.array;
+                
+                for(let i = 0; i < particlesCount; i++) {
+                    const i3 = i * 3;
+                    const x = initialPositions[i3];
+                    // Используем синус от времени и позиции X для создания плавной волны по оси Y
+                    // Разная фаза для каждой точки через randomness[i]
+                    const waveHeight = 2.5;
+                    const waveSpeed = 0.5;
+                    const frequency = 0.02;
+
+                    positions[i3 + 1] = initialPositions[i3 + 1] + 
+                                       Math.sin(x * frequency + elapsedTime * waveSpeed + randomness[i] * 5) * waveHeight;
+                }
+                particlesMesh.geometry.attributes.position.needsUpdate = true;
+
+                renderer.render(scene, camera);
+            };
+
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        };
+
+        // --- Scroll Animations ---
+        const initScrollAnimations = () => {
+            const observerOptions = {
+                threshold: 0.15,
+                rootMargin: "0px 0px -50px 0px"
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const elements = document.querySelectorAll('.scroll-animate');
+            elements.forEach(el => observer.observe(el));
+        };
+
+        // --- UI Logic ---
+        const initUI = () => {
+            // Sticky Header
+            const header = document.getElementById('header');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+
+            // Modal
+            const modal = document.getElementById('modal');
+            const openBtns = document.querySelectorAll('.btn-open-modal');
+            const closeBtn = document.querySelector('.close-modal');
+
+            openBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    modal.classList.add('active');
+                });
+            });
+
+            closeBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initThreeJS();
+            initScrollAnimations();
+            initUI();
+        });
+    </script>
 </body>
 </html>
